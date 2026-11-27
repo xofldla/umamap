@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="나카야마 잔디 2500m(아리마 기념) 코스 3D 맵과 계승 고유 발동 지점">
+<title>나카야마 2500m 계승 맵</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: 3D 코스(좌) + 계승 고유 목록(우) — 모바일은 위/아래로 쌓음. 트레센 남색 + 금색 */
+:root{
+  --bg:#141833; --panel:#1c2146; --panel-2:#242a58; --line:#343b74;
+  --fg:#eef0fb; --muted:#a3a9d6; --gold:#e3c46e;
+  --front:#4fa3ff; --back:#a57bff; --all:#f0b94a;
+  --straight:#5d6bc4; --corner:#c86b9c;
+  --display:"Black Han Sans","Noto Sans KR",sans-serif;
+  --body:"Noto Sans KR",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0}
+.wrap{min-height:100%;display:flex;flex-direction:column;gap:14px;padding-block:18px 22px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));box-sizing:border-box}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 20px}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(26px,4vw,40px);margin:0;letter-spacing:.5px;text-wrap:balance}
+h1 span{color:var(--gold)}
+.sub{color:var(--muted);font-size:13px;margin-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:500 13px var(--body);color:var(--fg);background:var(--panel);border:1.5px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--gold);color:#1b1d33;border-color:var(--gold)}
+.chip:focus-visible,.sk:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;flex:1;min-height:0}
+@media (max-width:860px){.main{grid-template-columns:1fr}}
+.stage{position:relative;background:radial-gradient(ellipse at 50% 30%,#232a63 0%,var(--bg) 70%);border:1.5px solid var(--line);border-radius:18px;overflow:hidden;min-height:440px;height:68vh;max-height:760px}
+@media (max-width:860px){.stage{height:58vh;min-height:360px}}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+.labels{position:absolute;inset:0;pointer-events:none}
+.lb{position:absolute;transform:translate(-50%,-100%);white-space:nowrap;font-size:12px;font-weight:700;padding:3px 8px;border-radius:7px;background:rgba(20,24,51,.86);border:1.5px solid currentColor;line-height:1.25}
+.lb small{display:block;font:500 10.5px var(--mono);color:var(--fg);opacity:.85}
+.lb.dim{opacity:.18}
+.lb.mk{color:var(--gold);font-weight:500;font-size:11px;border-style:dashed}
+.lb.sel{z-index:5;transform:translate(-50%,-100%) scale(1.12)}
+.legend{position:absolute;left:12px;bottom:12px;display:flex;flex-wrap:wrap;gap:6px 12px;font-size:11.5px;color:var(--muted);background:rgba(20,24,51,.8);border-radius:10px;padding:8px 10px;max-width:calc(100% - 24px)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+.hint{position:absolute;right:12px;top:10px;font-size:11px;color:var(--muted)}
+aside{background:var(--panel);border:1.5px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0;overflow:auto;max-height:76vh}
+@media (max-width:860px){aside{max-height:none}}
+.grp{font:500 12px var(--body);letter-spacing:1px;color:var(--muted);margin-top:4px}
+.sk{display:grid;grid-template-columns:8px 1fr auto;gap:10px;align-items:center;background:var(--panel-2);border:1.5px solid transparent;border-radius:12px;padding:9px 10px;cursor:pointer;text-align:left;color:var(--fg);font-family:var(--body)}
+.sk[aria-pressed="true"]{border-color:var(--gold)}
+.sk .bar{width:8px;height:100%;min-height:34px;border-radius:4px}
+.sk b{font-size:14px;font-weight:700;display:block}
+.sk span{font-size:12px;color:var(--muted)}
+.sk .v{font:500 12px var(--mono);color:var(--gold);text-align:right;white-space:nowrap}
+.star{color:var(--gold)}
+.course{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.cbox{background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;font-size:12.5px;color:var(--muted);line-height:1.55}
+.cbox b{display:block;color:var(--fg);font-size:13.5px;margin-bottom:2px}
+.cbox em{font-style:normal;font-family:var(--mono);color:var(--gold)}
+.wm{font-size:12px;color:var(--muted);text-align:right}
+@media (prefers-reduced-motion:reduce){.lb.sel{transform:translate(-50%,-100%)}}
+</style>
+<style>*{box-sizing:border-box}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>나카야마 <span>2500m</span> 계승 맵</h1>
+      <div class="sub">잔디 · 내회로 · 우회전 · 아리마 기념 코스 — 화살표 = 계승 고유가 터지는 지점 (★ 추천)</div>
+    </div>
+    <div class="chips" role="group" aria-label="각질 필터">
+      <button class="chip" id="f-all" data-f="all" aria-pressed="false">전체</button>
+      <button class="chip" id="f-front" data-f="front" aria-pressed="false">앞 각질</button>
+      <button class="chip" id="f-back" data-f="back" aria-pressed="false">뒤 각질</button>
+      <button class="chip" id="f-star" data-f="star" aria-pressed="true">★ 추천만</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="stage" id="stage">
+      <canvas id="cv" aria-label="나카야마 2500m 코스 3D 모델"></canvas>
+      <div class="labels" id="labels"></div>
+      <div class="hint">드래그 회전 · 휠/핀치 확대</div>
+      <div class="legend">
+        <span><i style="background:var(--straight)"></i>직선</span>
+        <span><i style="background:var(--corner)"></i>코너</span>
+        <span><i style="background:var(--front)"></i>앞 각질 고유</span>
+        <span><i style="background:var(--back)"></i>뒤 각질 고유</span>
+        <span><i style="background:var(--all)"></i>각질 무관</span>
+        <span style="color:var(--gold)">⮕ 금색 큰 화살표·흰 점 = 진행 방향 (우회전 · 시계방향)</span>
+        <span>높이 ×12 과장</span>
+      </div>
+    </div>
+    <aside id="list" aria-label="계승 고유 목록"></aside>
+  </div>
+
+  <div class="course">
+    <div class="cbox"><b>구간</b>초반 <em>0–417</em> · 중반 <em>417–1667</em><br>종반 <em>1667–2083</em> · 라스트 <em>2083–2500</em></div>
+    <div class="cbox"><b>스퍼트 · 자리 잡기</b>스퍼트 시작 <em>1667m</em> (건너편 직선)<br>포지션 킵 종료 <em>1042m</em></div>
+    <div class="cbox"><b>고저차</b>오르막 <em>621–731</em> · <em>825–1025</em><br>내리막 <em>1125–1525</em> · 결승 오르막 <em>2325–2435</em></div>
+    <div class="cbox"><b>핵심</b>최종 직선 <em>310m</em> 짧음 + 오르막 → 선입 유리<br>스탯 체크: 스태미나 · 근성</div>
+  </div>
+  <div class="wm">우마무스메 마이너 갤러리 ⓜ · 코스 데이터 GameTora</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function(){
+const css=getComputedStyle(document.documentElement);
+const C=k=>css.getPropertyValue(k).trim();
+const COL={front:C('--front'),back:C('--back'),all:C('--all')};
+
+/* ---------- 코스 데이터 (GameTora 10506) ---------- */
+const SEG=[
+  {s:0,e:100,t:'S'},{s:100,e:496,t:'C'},{s:496,e:875,t:'S'},
+  {s:875,e:1375,t:'C'},{s:1375,e:1700,t:'S'},{s:1700,e:2190,t:'C'},{s:2190,e:2500,t:'S'}];
+const SLOPE=[[621,731,2],[825,1025,1.5],[1125,1525,-1.5],[2325,2435,2]];
+const R=150, U=0.1, HX=12;              // 코너 반지름(m), 1unit=10m, 높이 과장
+
+// 거리 d → 2D 위치/방향 (우회전 = 시계방향)
+function pose(d){
+  let x=0,y=0,h=0;
+  for(const g of SEG){
+    const L=Math.min(d,g.e)-g.s; if(L<=0)break;
+    if(g.t==='S'){x+=Math.cos(h)*L;y+=Math.sin(h)*L;}
+    else{const segLen=g.e-g.s, ang=-Math.PI*(L/segLen);
+      const cx=x+Math.cos(h-Math.PI/2)*R, cy=y+Math.sin(h-Math.PI/2)*R;
+      const a0=h+Math.PI/2, a1=a0+ang;
+      x=cx+Math.cos(a1)*R; y=cy+Math.sin(a1)*R; h+=ang;}
+    if(d<=g.e)break;
+  }
+  return {x,y,h};
+}
+function elev(d){let z=0;for(const[s,e,p]of SLOPE){const L=Math.max(0,Math.min(d,e)-s);z+=L*p/100;}return z;}
+function segType(d){for(const g of SEG)if(d>=g.s&&d<=g.e)return g.t;return 'S';}
+// 중심 정렬
+const ctr=(()=>{let mx=1e9,Mx=-1e9,my=1e9,My=-1e9;for(let d=0;d<=2500;d+=10){const p=pose(d);mx=Math.min(mx,p.x);Mx=Math.max(Mx,p.x);my=Math.min(my,p.y);My=Math.max(My,p.y);}return{x:(mx+Mx)/2,y:(my+My)/2};})();
+function P3(d,lat=0,up=0){const p=pose(d);const nx=Math.cos(p.h-Math.PI/2),ny=Math.sin(p.h-Math.PI/2);
+  return new THREE.Vector3((p.x-ctr.x+nx*lat)*U,(elev(d)*HX)*U+up,-(p.y-ctr.y+ny*lat)*U);}
+
+/* ---------- 계승 고유 ---------- */
+const SK=[
+ {n:'빛나라! 터져라! 초신성 폭발!',u:'에피파네이아',s:'front',v:'속도1500+가속2000',d:1667,r:[1250,2500],st:1,note:'후반 계속 + 스퍼트 가속 · 앞 각질 가속 축'},
+ {n:'여름 하늘 헐레이션',u:'아그네스 타키온(수영복)',s:'front',v:'2500+가속250',d:1760,r:[1700,2190],st:1,note:'후반 코너 · 나카야마면 가속 추가'},
+ {n:'Shadow Ancestress',u:'에어 그루브(할로윈)',s:'front',v:'2500',d:1500,r:[1250,2500],st:1,note:'후반 랜덤 · 상위 50%'},
+ {n:'Joy to the World',u:'나리타 탑 로드(크리스마스)',s:'front',v:'2500',d:1300,r:[1125,1500],st:0,note:'전반 회복 발동 필요 · 선행 2~4위'},
+ {n:'∴win Q.E.D.',u:'비와 하야히데',s:'front',v:'2500',d:1960,r:[1950,2190],st:0,note:'최종 코너 · 4위 이내'},
+ {n:'복을 베푸는 바르카롤',u:'티엠 오페라 오(설날)',s:'front',v:'2500',d:2100,st:0,note:'남은 400m · 스킬 7개↑'},
+ {n:'스칼렛 릴리의 고양',u:'스틸 인 러브',s:'front',v:'2500',d:2200,st:0,note:'남은 300m · 상위 20~70%'},
+ {n:'승리의 고동',u:'오구리 캡',s:'front',v:'2500',d:2300,st:0,note:'남은 200m · 2~5위'},
+ {n:'위풍당당, 아름다운 꿈!',u:'스페셜 위크(총대장)',s:'all',v:'2500',d:2000,r:[1950,2190],st:1,note:'나카야마 한정 2500 (평소 500)'},
+ {n:'존귀한 사명을 완수하기 위하여',u:'메지로 맥퀸',s:'all',v:'2500',d:2060,r:[1950,2190],st:1,note:'최종 코너 · 장거리 스퍼트'},
+ {n:'황금을 찾아서',u:'스테이 골드',s:'back',v:'속도1500+가속2000',d:1690,r:[1250,2500],st:1,note:'후반 계속 + 스퍼트 가속 · 뒤 각질 가속 축'},
+ {n:'연무・숙녀의 나기나타',u:'그래스 원더(푸른)',s:'back',v:'2500',d:2100,st:1,note:'남은 400m · 비근간이라 2500'},
+ {n:'그리하여 깃든 피는 깨어나고',u:'두라멘테(할로윈)',s:'back',v:'2500',d:1580,r:[1250,2500],st:1,note:'후반 랜덤 · 상위 30~90%'},
+ {n:'대상 포착! 정의 수행!',u:'페노메노',s:'back',v:'2000',d:1420,r:[1375,1700],st:1,note:'후반 직선 · 장거리 2000'},
+ {n:'Mission: Triumph',u:'심볼리 크리스 에스',s:'back',v:'1500',d:1480,r:[1375,1525],st:0,note:'내리막 직선이면 3.6초'},
+ {n:'여름 벼락 캐스케이드!',u:'사토노 크라운(수영복)',s:'back',v:'현재속도2500',d:620,r:[0,1250],st:0,note:'선입 한정 · 전반 순위 상승'},
+ {n:'Shadow Break',u:'나리타 브라이언',s:'back',v:'2500',d:2150,st:0,note:'최종 코너 안쪽 추월'},
+ {n:'날 선 기세의 알레그로',u:'윈 바리아시옹',s:'back',v:'3500',d:2360,r:[2190,2500],st:0,note:'최종 직선 310m라 3명 추월 어려움'},
+];
+// 같은 지점 겹침 → 높이 계단
+{const used={};SK.sort((a,b)=>a.d-b.d).forEach(k=>{const key=Math.round(k.d/60);used[key]=(used[key]||0)+1;k.lvl=used[key]-1;});}
+
+/* ---------- three.js ---------- */
+const cv=document.getElementById('cv'),stage=document.getElementById('stage'),labels=document.getElementById('labels');
+let renderer;
+try{renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});}catch(e){stage.insertAdjacentHTML('beforeend','<p style="position:absolute;inset:40% 0 auto;text-align:center;color:var(--muted)">이 기기에선 3D를 표시할 수 없어요. 오른쪽 목록으로 확인하세요.</p>');return;}
+renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+const scene=new THREE.Scene();
+scene.fog=new THREE.Fog(0x141833,90,220);
+const cam=new THREE.PerspectiveCamera(42,1,0.5,600);
+cam.position.set(-6,70,62);
+const ctl=new THREE.OrbitControls(cam,cv);
+ctl.enableDamping=true;ctl.dampingFactor=.08;ctl.maxPolarAngle=Math.PI*0.47;ctl.minDistance=20;ctl.maxDistance=160;ctl.target.set(0,0,0);
+scene.add(new THREE.HemisphereLight(0xcfd6ff,0x1a1f45,.95));
+const dl=new THREE.DirectionalLight(0xffffff,.55);dl.position.set(30,60,20);scene.add(dl);
+
+// 바닥(잔디 내야)
+const g0=new THREE.CircleGeometry(80,64);g0.rotateX(-Math.PI/2);
+const ground=new THREE.Mesh(g0,new THREE.MeshLambertMaterial({color:0x1d3a2e}));ground.position.y=-0.6;scene.add(ground);
+const grid=new THREE.GridHelper(160,32,0x2c3470,0x232a5c);grid.position.y=-0.55;scene.add(grid);
+
+// 트랙 리본 (구간 색 + 1·2바퀴)
+const W=26, STEP=5;
+function ribbon(d0,d1,lat0,color,yOff=0,op=1){
+  const pos=[],idx=[];let i=0;
+  for(let d=d0;d<=d1+1e-6;d+=STEP){const a=P3(Math.min(d,d1),lat0-W/2,yOff),b=P3(Math.min(d,d1),lat0+W/2,yOff);pos.push(a.x,a.y,a.z,b.x,b.y,b.z);if(i>0){const k=i*2;idx.push(k-2,k-1,k,k-1,k+1,k);}i++;}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();
+  const m=new THREE.MeshLambertMaterial({color,side:THREE.DoubleSide,transparent:op<1,opacity:op});
+  const mesh=new THREE.Mesh(g,m);scene.add(mesh);return mesh;}
+for(const g of SEG) ribbon(g.s,g.e,0,g.t==='S'?C('--straight'):C('--corner'));
+// 가장자리 레일
+for(const side of[-W/2-1,W/2+1]){const pts=[];for(let d=0;d<=2500;d+=STEP)pts.push(P3(d,side,0.25));
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0xe9ecff,transparent:true,opacity:.55})));}
+// 경사 표시 (기둥)
+for(const[s,e,p]of SLOPE){for(let d=s;d<=e;d+=20){const a=P3(d,W/2+3,0),b=a.clone();b.y=-0.6;
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([a,b]),new THREE.LineBasicMaterial({color:p>0?0xff8a65:0x4dd0e1})));}}
+// 거리 표시 기둥 + 결승선
+function post(d,color,h=3){const a=P3(d,-W/2-2,0),b=a.clone();b.y+=h;scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([a,b]),new THREE.LineBasicMaterial({color})));return b;}
+const goal=post(2500,0xffffff,5),start=post(0,0xffffff,5);
+const spurt=post(1667,0xe3c46e,6),pk=post(1042,0x9aa0d6,4);
+
+/* ---------- 진행 방향 큰 화살표 (최외곽) ---------- */
+const dirShape=new THREE.Shape();
+dirShape.moveTo(-5,-1.6);dirShape.lineTo(1,-1.6);dirShape.lineTo(1,-3.6);dirShape.lineTo(6,0);dirShape.lineTo(1,3.6);dirShape.lineTo(1,1.6);dirShape.lineTo(-5,1.6);dirShape.lineTo(-5,-1.6);
+const dirGeo=new THREE.ShapeGeometry(dirShape);dirGeo.rotateX(-Math.PI/2);
+const dirMat=new THREE.MeshBasicMaterial({color:0xe3c46e,side:THREE.DoubleSide,transparent:true,opacity:.9});
+const dirArrows=[];
+for(const d of [40,300,690,1000,1250,1540,1825,2075,2420]){
+  const a=P3(d-6,0,0),b=P3(d+6,0,0);const dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);
+  const m=new THREE.Mesh(dirGeo,dirMat);m.position.copy(P3(d,-(W/2+8),0.3));m.position.y=Math.max(m.position.y,-0.3)+0.3;
+  m.rotation.y=Math.atan2(-dz/len,dx/len);scene.add(m);dirArrows.push(m);
+}
+// 달리는 점 (진행 방향)
+const runner=new THREE.Mesh(new THREE.SphereGeometry(1.3,20,14),new THREE.MeshBasicMaterial({color:0xffffff}));scene.add(runner);
+const trail=[];for(let i=0;i<8;i++){const s=new THREE.Mesh(new THREE.SphereGeometry(1.1-i*0.11,12,10),new THREE.MeshBasicMaterial({color:0xe3c46e,transparent:true,opacity:.55-i*0.06}));scene.add(s);trail.push(s);}
+
+/* ---------- 화살표 ---------- */
+const arrows=[];
+SK.forEach((k,i)=>{
+  const col=new THREE.Color(COL[k.s]);
+  const grp=new THREE.Group();
+  const base=P3(k.d,0,0.6), h=7+k.lvl*5.5;
+  const shaftG=new THREE.CylinderGeometry(.28,.28,h,10);shaftG.translate(0,h/2+2.4,0);
+  const coneG=new THREE.ConeGeometry(1.15,2.4,16);coneG.rotateX(Math.PI);coneG.translate(0,1.2,0);
+  const mat=new THREE.MeshLambertMaterial({color:col,emissive:col,emissiveIntensity:.35,transparent:true});
+  grp.add(new THREE.Mesh(shaftG,mat),new THREE.Mesh(coneG,mat));
+  grp.position.copy(base);scene.add(grp);
+  let band=null;
+  if(k.r){band=ribbon(k.r[0],k.r[1],0,COL[k.s],0.35+k.lvl*0.04,.22);band.renderOrder=2;band.material.depthWrite=false;}
+  const lb=document.createElement('div');lb.className='lb';lb.style.color=COL[k.s];
+  lb.innerHTML=(k.st?'<span class="star">★ </span>':'')+k.u.replace(/\(.+\)/,'')+'<small>'+k.v+' · '+k.d+'m</small>';
+  labels.appendChild(lb);
+  arrows.push({k,grp,mat,band,lb,top:new THREE.Vector3(base.x,base.y+h+3,base.z)});
+});
+// 지점 라벨
+const marks=[[start,'출발'],[goal,'결승 2500m'],[spurt,'스퍼트 1667m'],[pk,'포지션 킵 끝 1042m']].map(([v,t])=>{const el=document.createElement('div');el.className='lb mk';el.textContent=t;labels.appendChild(el);return{v,el};});
+const segNames=[[300,'3·4코너'],[690,'정면 직선'],[1125,'1·2코너'],[1540,'건너편 직선 · 내리막'],[1950,'3·4코너'],[2345,'최종 직선 310m ↑']];
+segNames.forEach(([d,t])=>{const el=document.createElement('div');el.className='lb mk';el.style.color='#a3a9d6';el.textContent=t;labels.appendChild(el);marks.push({v:P3(d,-W/2-6,1.5),el});});
+
+/* ---------- 목록 + 필터 ---------- */
+const list=document.getElementById('list');
+let filter='star',sel=null;
+function visible(k){return filter==='all'||filter===k.s||(filter==='star'&&k.st)||(k.s==='all'&&(filter==='front'||filter==='back'));}
+function renderList(){
+  list.innerHTML='';
+  const groups=[['앞 각질','front'],['뒤 각질','back'],['각질 무관','all']];
+  for(const[t,s]of groups){
+    const items=arrows.filter(a=>a.k.s===s&&visible(a.k)).sort((a,b)=>a.k.d-b.k.d);if(!items.length)continue;
+    const h=document.createElement('div');h.className='grp';h.textContent=t;list.appendChild(h);
+    for(const a of items){const k=a.k;const b=document.createElement('button');b.className='sk';b.id='sk-'+arrows.indexOf(a);
+      b.setAttribute('aria-pressed',sel===a?'true':'false');
+      b.innerHTML=`<i class="bar" style="background:${COL[k.s]}"></i><div><b>${k.st?'<span class="star">★</span> ':''}${k.n}</b><span>${k.u} · ${k.note}</span></div><div class="v">${k.v}<br>${k.d}m</div>`;
+      b.onclick=()=>{sel=(sel===a?null:a);if(sel){const t=a.top.clone();t.y-=6;flyTo=t;}renderList();};
+      list.appendChild(b);}
+  }
+}
+document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{filter=c.dataset.f;sel=null;document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x===c?'true':'false'));renderList();});
+renderList();
+
+/* ---------- 루프 ---------- */
+let flyTo=null;
+const v=new THREE.Vector3();
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();}
+new ResizeObserver(resize).observe(stage);resize();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let t0=performance.now();
+function place(el,p,w,h){v.copy(p).project(cam);const vis=v.z<1&&v.x>-1.1&&v.x<1.1&&v.y>-1.1&&v.y<1.2;el.hidden=!vis;if(vis){el.style.left=((v.x+1)/2*w)+'px';el.style.top=((1-v.y)/2*h)+'px';}}
+function loop(now){
+  const t=(now-t0)/1000;
+  if(flyTo){ctl.target.lerp(flyTo,.08);if(ctl.target.distanceTo(flyTo)<.2)flyTo=null;}
+  ctl.update();
+  const w=stage.clientWidth,h=stage.clientHeight;
+  for(const a of arrows){
+    const on=visible(a.k), hi=!sel||sel===a;
+    a.grp.visible=on;if(a.band)a.band.visible=on&&(!sel||sel===a);
+    a.mat.opacity=hi?1:.15;
+    a.grp.position.y=P3(a.k.d,0,0.6).y+(reduce?0:Math.sin(t*2+a.k.d)*0.35);
+    if(!on){a.lb.hidden=true;continue;}
+    place(a.lb,a.top,w,h);if(!a.k.st&&sel!==a&&filter!=='front'&&filter!=='back'){a.lb.hidden=true;}a.lb.classList.toggle('dim',!hi);a.lb.classList.toggle('sel',sel===a);
+  }
+  for(const m of marks)place(m.el,m.v,w,h);
+  const rd=reduce?1667:((t*190)%2500);runner.position.copy(P3(rd,0,1.6));
+  trail.forEach((s,i)=>{const dd=Math.max(0,rd-(i+1)*22);s.position.copy(P3(dd,0,1.6));s.visible=!reduce&&rd>(i+1)*22;});
+  if(!reduce)dirMat.opacity=.65+Math.sin(t*3)*.25;
+  renderer.render(scene,cam);requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+})();
+</script>
+
+</body>
+</html>
