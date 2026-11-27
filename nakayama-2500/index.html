@@ -253,7 +253,7 @@ SK.forEach((k,i)=>{
   arrows.push({k,grp,mat,band,lb,top:new THREE.Vector3(base.x,base.y+h+3,base.z)});
 });
 // 지점 라벨
-const marks=[[start,'출발'],[goal,'결승 2500m'],[spurt,'스퍼트 1667m'],[pk,'포지션 킵 끝 1042m']].map(([v,t])=>{const el=document.createElement('div');el.className='lb mk';el.textContent=t;labels.appendChild(el);return{v,el};});
+const marks=[[start,'스타트'],[goal,'골인 2500m'],[spurt,'스퍼트 1667m'],[pk,'포지션 킵 끝 1042m']].map(([v,t])=>{const el=document.createElement('div');el.className='lb mk';el.textContent=t;labels.appendChild(el);return{v,el};});
 const segNames=[[300,'3·4코너'],[690,'정면 직선'],[1125,'1·2코너'],[1540,'건너편 직선 · 내리막'],[1950,'3·4코너'],[2345,'최종 직선 310m ↑']];
 segNames.forEach(([d,t])=>{const el=document.createElement('div');el.className='lb mk';el.style.color='#a3a9d6';el.textContent=t;labels.appendChild(el);marks.push({v:P3(d,-W/2-6,1.5),el});});
 
