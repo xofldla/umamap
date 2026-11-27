@@ -254,6 +254,7 @@ SK.forEach((k,i)=>{
 });
 // 지점 라벨
 const marks=[[start,'스타트'],[goal,'골인 2500m'],[spurt,'스퍼트 1667m'],[pk,'포지션 킵 끝 1042m']].map(([v,t])=>{const el=document.createElement('div');el.className='lb mk';el.textContent=t;labels.appendChild(el);return{v,el};});
+marks[0].el.style.cssText+=';color:#ff5a5a;font-weight:900;font-size:13px;border-style:solid';
 const segNames=[[300,'3·4코너'],[690,'정면 직선'],[1125,'1·2코너'],[1540,'건너편 직선 · 내리막'],[1950,'3·4코너'],[2345,'최종 직선 310m ↑']];
 segNames.forEach(([d,t])=>{const el=document.createElement('div');el.className='lb mk';el.style.color='#a3a9d6';el.textContent=t;labels.appendChild(el);marks.push({v:P3(d,-W/2-6,1.5),el});});
 
