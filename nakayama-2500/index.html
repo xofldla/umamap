@@ -179,7 +179,7 @@ const SK=[
  {n:'날 선 기세의 알레그로',u:'윈 바리아시옹',s:'back',v:'3500',d:2360,r:[2190,2500],st:0,note:'최종 직선 310m라 3명 추월 어려움'},
 ];
 // 같은 지점 겹침 → 높이 계단
-{SK.sort((a,b)=>a.d-b.d);let last=-1e9,lv=0;SK.forEach(k=>{k.lvl=0;if(!k.st)return;lv=(k.d-last<90)?lv+1:0;k.lvl=lv%2;last=k.d;});}
+{SK.sort((a,b)=>a.d-b.d);let last=-1e9,lv=0;SK.forEach(k=>{k.lvl=0;if(!k.st)return;lv=(k.d-last<90)?lv+1:0;k.lvl=lv%3;last=k.d;});}
 
 /* ---------- three.js ---------- */
 const cv=document.getElementById('cv'),stage=document.getElementById('stage'),labels=document.getElementById('labels');
@@ -240,7 +240,7 @@ const arrows=[];
 SK.forEach((k,i)=>{
   const col=new THREE.Color(COL[k.s]);
   const grp=new THREE.Group();
-  const base=P3(k.d,0,0.6), h=k.st?(15+k.lvl*6):5;
+  const base=P3(k.d,0,0.6), h=k.st?(14+k.lvl*8):5;
   const shaftG=new THREE.CylinderGeometry(k.st?.4:.22,k.st?.4:.22,h,10);shaftG.translate(0,h/2+2.4,0);
   const coneG=new THREE.ConeGeometry(1.15,2.4,16);coneG.rotateX(Math.PI);coneG.translate(0,1.2,0);
   const mat=new THREE.MeshLambertMaterial({color:col,emissive:col,emissiveIntensity:.35,transparent:true});
@@ -301,6 +301,11 @@ function loop(now){
     place(a.lb,a.top,w,h);if(!a.k.st&&sel!==a&&filter!=='front'&&filter!=='back'){a.lb.hidden=true;}a.lb.classList.toggle('dim',!hi);a.lb.classList.toggle('sel',sel===a);
   }
   for(const m of marks)place(m.el,m.v,w,h);
+  // 화면 위 라벨 겹침 해소: 아래쪽부터 놓고, 겹치면 위로 밀어올림
+  {const items=[];for(const el of labels.children){if(el.hidden)continue;const x=parseFloat(el.style.left),y=parseFloat(el.style.top);if(isNaN(x))continue;items.push({el,x,y,w:el.offsetWidth,h:el.offsetHeight,pri:el.classList.contains('mk')?0:1});}
+   items.sort((a,b)=>b.y-a.y);const placed=[];
+   for(const it of items){let y=it.y;let moved=true,guard=0;while(moved&&guard++<30){moved=false;for(const p of placed){if(Math.abs(it.x-p.x)<(it.w+p.w)/2+4&&y>p.y-p.h-4&&y-it.h<p.y+4){y=p.y-p.h-4;moved=true;}}}
+     it.y=y;placed.push(it);it.el.style.top=y+'px';}}
   const rd=reduce?1667:((t*190)%2500);runner.position.copy(P3(rd,0,1.6));
   trail.forEach((s,i)=>{const dd=Math.max(0,rd-(i+1)*22);s.position.copy(P3(dd,0,1.6));s.visible=!reduce&&rd>(i+1)*22;});
   if(!reduce)dirMat.opacity=.65+Math.sin(t*3)*.25;
