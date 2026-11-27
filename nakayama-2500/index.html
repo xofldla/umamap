@@ -179,7 +179,7 @@ const SK=[
  {n:'날 선 기세의 알레그로',u:'윈 바리아시옹',s:'back',v:'3500',d:2360,r:[2190,2500],st:0,note:'최종 직선 310m라 3명 추월 어려움'},
 ];
 // 같은 지점 겹침 → 높이 계단
-{const used={};SK.sort((a,b)=>a.d-b.d).forEach(k=>{const key=Math.round(k.d/60);used[key]=(used[key]||0)+1;k.lvl=used[key]-1;});}
+{SK.sort((a,b)=>a.d-b.d);let last=-1e9,lv=0;SK.forEach(k=>{k.lvl=0;if(!k.st)return;lv=(k.d-last<90)?lv+1:0;k.lvl=lv%2;last=k.d;});}
 
 /* ---------- three.js ---------- */
 const cv=document.getElementById('cv'),stage=document.getElementById('stage'),labels=document.getElementById('labels');
@@ -240,8 +240,8 @@ const arrows=[];
 SK.forEach((k,i)=>{
   const col=new THREE.Color(COL[k.s]);
   const grp=new THREE.Group();
-  const base=P3(k.d,0,0.6), h=7+k.lvl*5.5;
-  const shaftG=new THREE.CylinderGeometry(.28,.28,h,10);shaftG.translate(0,h/2+2.4,0);
+  const base=P3(k.d,0,0.6), h=k.st?(15+k.lvl*6):5;
+  const shaftG=new THREE.CylinderGeometry(k.st?.4:.22,k.st?.4:.22,h,10);shaftG.translate(0,h/2+2.4,0);
   const coneG=new THREE.ConeGeometry(1.15,2.4,16);coneG.rotateX(Math.PI);coneG.translate(0,1.2,0);
   const mat=new THREE.MeshLambertMaterial({color:col,emissive:col,emissiveIntensity:.35,transparent:true});
   grp.add(new THREE.Mesh(shaftG,mat),new THREE.Mesh(coneG,mat));
