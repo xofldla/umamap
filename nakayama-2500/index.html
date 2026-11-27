@@ -304,9 +304,13 @@ function loop(now){
   // 화면 위 라벨 겹침 해소: 아래쪽부터 놓고, 겹치면 위로 밀어올림
   {const items=[];for(const el of labels.children){if(el.hidden)continue;const x=parseFloat(el.style.left),y=parseFloat(el.style.top);if(isNaN(x))continue;items.push({el,x,y,w:el.offsetWidth,h:el.offsetHeight,pri:el.classList.contains('mk')?0:1});}
    items.sort((a,b)=>b.y-a.y);const placed=[];
-   for(const it of items){let y=it.y;let moved=true,guard=0;while(moved&&guard++<30){moved=false;for(const p of placed){if(Math.abs(it.x-p.x)<(it.w+p.w)/2+4&&y>p.y-p.h-4&&y-it.h<p.y+4){y=p.y-p.h-4;moved=true;}}}
-     if(y-it.h<4){y=it.y;let dx=0;for(let s=1;s<12;s++){const nx=it.x+(s%2?1:-1)*Math.ceil(s/2)*(it.w*0.55);if(!placed.some(p=>Math.abs(nx-p.x)<(it.w+p.w)/2+4&&y>p.y-p.h-4&&y-it.h<p.y+4)){dx=nx-it.x;break;}}it.x+=dx;it.el.style.left=it.x+'px';}
-     it.y=y;placed.push(it);it.el.style.top=y+'px';}}
+   const hit=(x,y,it)=>placed.some(p=>Math.abs(x-p.x)<(it.w+p.w)/2+4&&y>p.y-p.h-4&&y-it.h<p.y+4);
+   const cands=[];for(let j=0;j<10;j++)for(const k of[0,1,-1,2,-2,3,-3,4,-4,5,-5,6,-6])cands.push([k,j,Math.abs(k)*0.9+j]);cands.sort((a,b)=>a[2]-b[2]);
+   for(const it of items){let bx=it.x,by=it.y,ok=false;
+     for(const[k,j]of cands){const x=Math.min(Math.max(it.x+k*it.w*0.6,it.w/2+4),w-it.w/2-4),y=it.y-j*(it.h+4);
+       if(y-it.h<4||y>h-4)continue;if(!hit(x,y,it)){bx=x;by=y;ok=true;break;}}
+     if(!ok){bx=Math.min(Math.max(it.x,it.w/2+4),w-it.w/2-4);by=Math.max(it.y,it.h+4);}
+     it.x=bx;it.y=by;placed.push(it);it.el.style.left=bx+'px';it.el.style.top=by+'px';}}
   const rd=reduce?1667:((t*190)%2500);runner.position.copy(P3(rd,0,1.6));
   trail.forEach((s,i)=>{const dd=Math.max(0,rd-(i+1)*22);s.position.copy(P3(dd,0,1.6));s.visible=!reduce&&rd>(i+1)*22;});
   if(!reduce)dirMat.opacity=.65+Math.sin(t*3)*.25;
