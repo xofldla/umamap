@@ -463,7 +463,7 @@ function loop(now){
   for(const a of arrows){
     const on=visible(a.k), hi=(!sel||sel===a)&&!hl;
     a.grp.visible=on;if(a.band)a.band.visible=on&&(!sel||sel===a);
-    a.mat.opacity=hi?1:.15;
+    a.mat.opacity=sel===a?1:.03;a.mat.depthWrite=sel===a;
     a.grp.position.y=P3(a.k.d,0,0.6).y+(reduce?0:Math.sin(t*2+a.k.d)*0.35);
     if(!on){a.lb.hidden=true;continue;}
     place(a.lb,a.top,w,h);if(!a.k.st&&sel!==a&&filter!=='front'&&filter!=='back'){a.lb.hidden=true;}a.lb.classList.toggle('dim',!hi);a.lb.classList.toggle('sel',sel===a);
