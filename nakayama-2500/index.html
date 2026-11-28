@@ -36,10 +36,11 @@ header>div:first-child{padding-right:150px;min-width:0}
 @media (max-width:560px){header>div:first-child{padding-right:0;padding-top:40px}}
 .chip[aria-pressed="true"]{background:var(--gold);color:#1b1d33;border-color:var(--gold)}
 .chip:focus-visible,.sk:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-.main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;flex:1;min-height:0}
-@media (max-width:860px){.main{grid-template-columns:1fr}}
-.stage{position:relative;background:radial-gradient(ellipse at 50% 30%,#232a63 0%,var(--bg) 70%);border:1.5px solid var(--line);border-radius:18px;overflow:hidden;min-height:440px;height:68vh;max-height:760px}
-@media (max-width:860px){.stage{height:58vh;min-height:360px}}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;flex:none;height:max(640px,calc(100vh - 130px));height:max(640px,calc(100dvh - 130px))}
+.main>*{min-height:0}
+@media (max-width:860px){.main{grid-template-columns:1fr;height:auto}}
+.stage{position:relative;background:radial-gradient(ellipse at 50% 30%,#232a63 0%,var(--bg) 70%);border:1.5px solid var(--line);border-radius:18px;overflow:hidden;height:100%;box-sizing:border-box}
+@media (max-width:860px){.stage{height:66vh;min-height:400px}}
 canvas{display:block;width:100%;height:100%;touch-action:none}
 .labels{position:absolute;inset:0;pointer-events:none}
 .lb.pick{pointer-events:auto;cursor:pointer}
@@ -59,8 +60,8 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .legend{position:absolute;left:12px;bottom:12px;display:flex;flex-wrap:wrap;gap:6px 12px;font-size:11.5px;color:var(--muted);background:rgba(20,24,51,.8);border-radius:10px;padding:8px 10px;max-width:calc(100% - 24px)}
 .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px}
 .hint{position:absolute;right:12px;top:10px;font-size:11px;color:var(--muted)}
-aside{background:var(--panel);border:1.5px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0;overflow:auto;max-height:76vh}
-@media (max-width:860px){aside{max-height:none}}
+aside{background:var(--panel);border:1.5px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0;overflow:auto;height:100%;box-sizing:border-box}
+@media (max-width:860px){aside{height:auto;max-height:none}}
 .grp{font:500 12px var(--body);letter-spacing:1px;color:var(--muted);margin-top:4px}
 .sk{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;background:var(--panel-2);border:1.5px solid transparent;border-radius:12px;padding:9px 10px;cursor:pointer;text-align:left;color:var(--fg);font-family:var(--body)}
 .sk[aria-pressed="true"]{border-color:var(--gold)}
@@ -82,7 +83,7 @@ aside{background:var(--panel);border:1.5px solid var(--line);border-radius:18px;
 .ci[aria-pressed="true"] .bar i{animation:barw 1.1s ease-out}
 @keyframes barw{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
 .cnote{font-size:10.5px;color:var(--muted);padding:4px 2px 0;line-height:1.4}.cnote em{font-style:normal;color:var(--gold)}
-.stage .hint{left:220px}
+.stage .hint{left:auto;right:12px;z-index:9;background:rgba(20,24,51,.75);padding:2px 8px;border-radius:6px}
 @media (max-width:860px){
  .course{left:8px;right:8px;top:8px;bottom:auto;width:auto;flex-direction:row;overflow-x:auto;overflow-y:hidden;padding:6px;gap:5px;border-radius:12px}
  .cg,.cnote{display:none}
@@ -433,7 +434,10 @@ applyLang();
   const objs=[];arrows.forEach(a=>{if(a.grp.visible)objs.push(...a.grp.children);});
   const hit=ray.intersectObjects(objs,false)[0];select(hit?hit.object.userData.arrow:null,true);});}
 const v=new THREE.Vector3();
-function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();}
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);cam.aspect=w/h;
+  if(innerWidth>860){const ox=Math.round((clist.offsetWidth+12)/2);cam.setViewOffset(w,h,-ox,0,w,h);}else{const oy=Math.round((clist.offsetHeight+8)/2);cam.setViewOffset(w,h,0,-oy,w,h);}
+  cam.updateProjectionMatrix();}
+{const lg=document.querySelector('.legend');const fit=()=>{if(innerWidth>860)clist.style.bottom=(lg.offsetHeight+22)+'px';else clist.style.bottom='';};new ResizeObserver(fit).observe(lg);addEventListener('resize',fit);fit();new ResizeObserver(()=>resize()).observe(clist);}
 new ResizeObserver(resize).observe(stage);resize();
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let t0=performance.now();
@@ -456,13 +460,13 @@ function loop(now){
   updateHL(now);if(hl){place(hlLb,P3((hl.c.s+hl.c.e)/2,0,9),w,h);if(hlLb.hidden===false&&!hlLb.style.left)hlLb.hidden=true;}
   // 화면 위 라벨 겹침 해소: 아래쪽부터 놓고, 겹치면 위로 밀어올림
   {const items=[];for(const el of labels.children){if(el.hidden)continue;const x=parseFloat(el.style.left),y=parseFloat(el.style.top);if(isNaN(x))continue;items.push({el,x,y,w:el.offsetWidth,h:el.offsetHeight,pri:el.classList.contains('mk')?0:1});}
-   items.sort((a,b)=>b.y-a.y);const placed=[];
+   items.sort((a,b)=>b.y-a.y);const placed=[];const dk=innerWidth>860,LP=dk?clist.offsetWidth+16:0,TP=dk?0:clist.offsetHeight+10;
    const hit=(x,y,it)=>placed.some(p=>Math.abs(x-p.x)<(it.w+p.w)/2+4&&y>p.y-p.h-4&&y-it.h<p.y+4);
    const cands=[];for(let j=0;j<10;j++)for(const k of[0,1,-1,2,-2,3,-3,4,-4,5,-5,6,-6])cands.push([k,j,Math.abs(k)*0.9+j]);cands.sort((a,b)=>a[2]-b[2]);
    for(const it of items){let bx=it.x,by=it.y,ok=false;
-     for(const[k,j]of cands){const x=Math.min(Math.max(it.x+k*it.w*0.6,it.w/2+4),w-it.w/2-4),y=it.y-j*(it.h+4);
-       if(y-it.h<4||y>h-4)continue;if(!hit(x,y,it)){bx=x;by=y;ok=true;break;}}
-     if(!ok){bx=Math.min(Math.max(it.x,it.w/2+4),w-it.w/2-4);by=Math.max(it.y,it.h+4);}
+     for(const[k,j]of cands){const x=Math.min(Math.max(it.x+k*it.w*0.6,LP+it.w/2+4),w-it.w/2-4),y=it.y-j*(it.h+4);
+       if(y-it.h<TP+4||y>h-4)continue;if(!hit(x,y,it)){bx=x;by=y;ok=true;break;}}
+     if(!ok){bx=Math.min(Math.max(it.x,LP+it.w/2+4),w-it.w/2-4);by=Math.max(it.y,TP+it.h+4);}
      it.x=bx;it.y=by;placed.push(it);it.el.style.left=bx+'px';it.el.style.top=by+'px';}}
   const rd=reduce?1667:((t*190)%2500);runner.position.copy(P3(rd,0,1.6));
   trail.forEach((s,i)=>{const dd=Math.max(0,rd-(i+1)*22);s.position.copy(P3(dd,0,1.6));s.visible=!reduce&&rd>(i+1)*22;});
