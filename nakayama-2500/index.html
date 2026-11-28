@@ -37,6 +37,15 @@ h1 span{color:var(--gold)}
 @media (max-width:860px){.stage{height:58vh;min-height:360px}}
 canvas{display:block;width:100%;height:100%;touch-action:none}
 .labels{position:absolute;inset:0;pointer-events:none}
+.lb.pick{pointer-events:auto;cursor:pointer}
+.lb.pick:hover{filter:brightness(1.25)}
+.pop{position:absolute;right:12px;bottom:56px;width:min(300px,calc(100% - 24px));background:rgba(28,33,70,.96);border:1.5px solid var(--gold);border-radius:14px;padding:12px 14px;display:grid;grid-template-columns:56px 1fr;gap:4px 12px;align-items:center;z-index:10;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.pop .pav{grid-row:1/3;width:56px;height:56px;border-radius:50%;background-size:138%;background-position:50% 6%;border:3px solid}
+.pop b{font-size:15px;line-height:1.3}
+.pop .pu{font-size:12px;color:var(--muted)}
+.pop .pv{grid-column:1/3;font:500 13px var(--mono);color:var(--gold);margin-top:6px}
+.pop .pn{grid-column:1/3;font-size:12.5px;color:var(--fg);line-height:1.5}
+.pop .px{position:absolute;right:8px;top:6px;background:none;border:0;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 6px}
 .lb{position:absolute;transform:translate(-50%,-100%);white-space:nowrap;font-size:12px;font-weight:700;padding:3px 8px;border-radius:7px;background:rgba(20,24,51,.86);border:1.5px solid currentColor;line-height:1.25}
 .lb small{display:block;font:500 10.5px var(--mono);color:var(--fg);opacity:.85}
 .lb.dim{opacity:.18}
@@ -85,7 +94,8 @@ aside{background:var(--panel);border:1.5px solid var(--line);border-radius:18px;
     <div class="stage" id="stage">
       <canvas id="cv" aria-label="나카야마 2500m 코스 3D 모델"></canvas>
       <div class="labels" id="labels"></div>
-      <div class="hint">드래그 회전 · 휠/핀치 확대</div>
+      <div class="hint">드래그 회전 · 휠/핀치 확대 · 화살표·라벨 클릭 = 상세</div>
+      <div class="pop" id="pop" hidden role="dialog" aria-label="계승 고유 상세"></div>
       <div class="legend">
         <span><i style="background:var(--straight)"></i>직선</span>
         <span><i style="background:var(--corner)"></i>코너</span>
@@ -250,8 +260,13 @@ SK.forEach((k,i)=>{
   if(k.r){band=ribbon(k.r[0],k.r[1],0,COL[k.s],0.35+k.lvl*0.04,.22);band.renderOrder=2;band.material.depthWrite=false;}
   const lb=document.createElement('div');lb.className='lb';lb.style.color=COL[k.s];
   lb.innerHTML='<i class="av2" style="background-image:url('+(AV[k.u]||'')+')"></i>'+(k.st?'<span class="star">★ </span>':'')+k.u.replace(/\(.+\)/,'')+'<small>'+k.v+' · '+k.d+'m</small>';
+  lb.classList.add('pick');lb.tabIndex=0;
   labels.appendChild(lb);
-  arrows.push({k,grp,mat,band,lb,top:new THREE.Vector3(base.x,base.y+h+3,base.z)});
+  const A={k,grp,mat,band,lb,top:new THREE.Vector3(base.x,base.y+h+3,base.z)};
+  grp.children.forEach(c=>c.userData.arrow=A);
+  lb.addEventListener('click',e=>{e.stopPropagation();select(A,true);});
+  lb.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select(A,true);}});
+  arrows.push(A);
 });
 // 지점 라벨
 const marks=[[start,'스타트'],[goal,'골인 2500m'],[spurt,'스퍼트 1667m'],[pk,'포지션 킵 끝 1042m']].map(([v,t])=>{const el=document.createElement('div');el.className='lb mk';el.textContent=t;labels.appendChild(el);return{v,el};});
@@ -272,7 +287,7 @@ function renderList(){
     for(const a of items){const k=a.k;const b=document.createElement('button');b.className='sk';b.id='sk-'+arrows.indexOf(a);
       b.setAttribute('aria-pressed',sel===a?'true':'false');
       b.innerHTML=`<i class="av" style="border-color:${COL[k.s]};background-image:url(${AV[k.u]||''})"></i><div><b>${k.st?'<span class="star">★</span> ':''}${k.n}</b><span>${k.u} · ${k.note}</span></div><div class="v">${k.v}<br>${k.d}m</div>`;
-      b.onclick=()=>{sel=(sel===a?null:a);if(sel){const t=a.top.clone();t.y-=6;flyTo=t;}renderList();};
+      b.onclick=()=>select(a,false);
       list.appendChild(b);}
   }
 }
@@ -281,6 +296,27 @@ renderList();
 
 /* ---------- 루프 ---------- */
 let flyTo=null;
+const pop=document.getElementById('pop');
+function showPop(a){
+  if(!a){pop.hidden=true;return;}
+  const k=a.k;
+  pop.innerHTML=`<button class="px" aria-label="닫기">×</button><i class="pav" style="border-color:${COL[k.s]};background-image:url(${AV[k.u]||''})"></i><b>${k.st?'<span class="star">★</span> ':''}${k.n}</b><span class="pu">${k.u} · ${k.s==='front'?'앞 각질':k.s==='back'?'뒤 각질':'각질 무관'}</span><div class="pv">계승 ${k.v} · ${k.r?k.r[0]+'~'+k.r[1]+'m':k.d+'m'}</div><div class="pn">${k.note}</div>`;
+  pop.querySelector('.px').onclick=()=>select(null);
+  pop.hidden=false;
+}
+function select(a,fromMap){
+  sel=(a&&sel===a&&!fromMap)?null:a;
+  if(sel){const t=sel.top.clone();t.y-=6;flyTo=t;}
+  showPop(sel);renderList();
+  if(sel){const b=document.getElementById('sk-'+arrows.indexOf(sel));if(b&&fromMap)b.scrollIntoView({block:'nearest',behavior:'smooth'});}
+}
+// 화살표 직접 클릭 (드래그와 구분)
+{const ray=new THREE.Raycaster(),mp=new THREE.Vector2();let down=null;
+ cv.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY];});
+ cv.addEventListener('pointerup',e=>{if(!down)return;const moved=Math.hypot(e.clientX-down[0],e.clientY-down[1]);down=null;if(moved>6)return;
+  const r=cv.getBoundingClientRect();mp.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(mp,cam);
+  const objs=[];arrows.forEach(a=>{if(a.grp.visible)objs.push(...a.grp.children);});
+  const hit=ray.intersectObjects(objs,false)[0];select(hit?hit.object.userData.arrow:null,true);});}
 const v=new THREE.Vector3();
 function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();}
 new ResizeObserver(resize).observe(stage);resize();
