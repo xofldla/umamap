@@ -69,7 +69,21 @@ aside{background:var(--panel);border:1.5px solid var(--line);border-radius:18px;
 .sk span{font-size:12px;color:var(--muted)}
 .sk .v{font:500 12px var(--mono);color:var(--gold);text-align:right;max-width:92px;overflow-wrap:anywhere}
 .star{color:var(--gold)}
-.course{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.course{background:var(--panel);border:1.5px solid var(--line);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;text-align:left}
+.cg{font:500 12px var(--body);letter-spacing:1px;color:var(--muted);margin:8px 0 2px}.cg:first-child{margin-top:0}
+.ci{display:grid;grid-template-columns:12px minmax(0,300px) 104px minmax(100px,260px);justify-content:start;gap:10px;align-items:center;width:100%;text-align:left;background:var(--panel-2);border:1.5px solid transparent;border-radius:10px;padding:8px 12px;color:var(--fg);font:500 13.5px var(--body);cursor:pointer}
+.ci:hover{border-color:var(--line)}.ci[aria-pressed="true"]{border-color:var(--gold);background:#2a3170}
+.ci:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.ci .dot{width:12px;height:12px;border-radius:50%}
+.ci .rg{font:500 12.5px var(--mono);color:var(--gold);white-space:nowrap;text-align:left}
+.ci .bar{position:relative;height:8px;border-radius:4px;background:#1a1f45;overflow:hidden}
+.ci .bar i{position:absolute;top:0;bottom:0;border-radius:4px}
+.ci[aria-pressed="true"] .bar i{animation:barw 1.1s ease-out}
+@keyframes barw{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+.cnote{font-size:12.5px;color:var(--muted);padding:6px 2px 0}.cnote em{font-style:normal;color:var(--gold)}
+@media (max-width:560px){.ci{grid-template-columns:12px minmax(0,1fr) auto;justify-content:stretch}.ci .bar{grid-column:1/4}}
+.pop[hidden]{display:none}
+.lb.cl{z-index:7;font-size:12.5px;border-width:2px;background:rgba(20,24,51,.95)}
 .cbox{background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;font-size:12.5px;color:var(--muted);line-height:1.55}
 .cbox b{display:block;color:var(--fg);font-size:13.5px;margin-bottom:2px}
 .cbox em{font-style:normal;font-family:var(--mono);color:var(--gold)}
@@ -115,12 +129,7 @@ aside{background:var(--panel);border:1.5px solid var(--line);border-radius:18px;
     <aside id="list" aria-label="계승 고유 목록"></aside>
   </div>
 
-  <div class="course">
-    <div class="cbox" data-i="cb1"></div>
-    <div class="cbox" data-i="cb2"></div>
-    <div class="cbox" data-i="cb3"></div>
-    <div class="cbox" data-i="cb4"></div>
-  </div>
+  <div class="course" id="clist" aria-label="Course data"></div>
   <div class="wm" data-i="wm"></div>
 </div>
 
@@ -289,6 +298,78 @@ marks[0].el.style.cssText+=';color:#ff5a5a;font-weight:900;font-size:13px;border
 const segNames=[[300,'s1'],[690,'s2'],[1125,'s3'],[1540,'s4'],[1950,'s5'],[2345,'s6']];
 segNames.forEach(([d,key])=>{const el=document.createElement('div');el.className='lb mk';el.style.color='#a3a9d6';el.dataset.k=key;labels.appendChild(el);marks.push({v:P3(d,-W/2-6,1.5),el});});
 
+/* ---------- 코스 데이터 리스트 + 구간 애니메이션 ---------- */
+const CG={phase:{ko:'구간',ja:'区間',en:'Phases'},spurt:{ko:'스퍼트 · 자리 잡기',ja:'スパート・位置取り',en:'Spurt · positioning'},slope:{ko:'고저차',ja:'高低差',en:'Elevation'},key:{ko:'핵심',ja:'ポイント',en:'Key points'}};
+const CL=[
+ {g:'phase',s:0,e:417,c:'#7fb3ff',ko:'초반',ja:'序盤',en:'Early'},
+ {g:'phase',s:417,e:1667,c:'#9aa0d6',ko:'중반',ja:'中盤',en:'Mid'},
+ {g:'phase',s:1667,e:2083,c:'#e3c46e',ko:'종반',ja:'終盤',en:'Late'},
+ {g:'phase',s:2083,e:2500,c:'#ff7a7a',ko:'라스트',ja:'ラスト',en:'Last spurt'},
+ {g:'spurt',s:1667,e:2500,c:'#e3c46e',ko:'스퍼트 (건너편 직선 1667m~)',ja:'スパート（向正面直線 1667m〜）',en:'Spurt (from backstretch 1667m)'},
+ {g:'spurt',s:0,e:1042,c:'#9aa0d6',ko:'포지션 킵 (~1042m 종료)',ja:'ポジションキープ（〜1042m 終了）',en:'Position keep (ends 1042m)'},
+ {g:'slope',s:621,e:731,c:'#ff8a65',ko:'오르막 ①',ja:'上り坂 ①',en:'Uphill ①'},
+ {g:'slope',s:825,e:1025,c:'#ff8a65',ko:'오르막 ②',ja:'上り坂 ②',en:'Uphill ②'},
+ {g:'slope',s:1125,e:1525,c:'#4dd0e1',ko:'내리막',ja:'下り坂',en:'Downhill'},
+ {g:'slope',s:2325,e:2435,c:'#ff8a65',ko:'결승 오르막',ja:'ゴール前上り',en:'Final uphill'},
+ {g:'key',s:2190,e:2500,c:'#e3c46e',ko:'최종 직선 310m (짧음 + 오르막 → 선입 유리)',ja:'最終直線 310m（短く上り坂 → 差し有利）',en:'Final straight 310m (short + uphill → Betweeners favored)'}];
+const CNOTE={ko:'스탯 체크: <em>스태미나 · 근성</em>',ja:'ステータスチェック：<em>スタミナ・根性</em>',en:'Stat check: <em>Stamina · Guts</em>'};
+const clist=document.getElementById('clist');
+let csel=null;
+// 하이라이트 리본(그리기 범위로 쓸어가는 애니메이션)
+function hlMesh(d0,d1,color){
+  const pos=[],idx=[];let i=0;const st=4,ww=W+6;
+  for(let d=d0;d<=d1+1e-6;d+=st){const dd=Math.min(d,d1),a=P3(dd,-ww/2,0.9),b=P3(dd,ww/2,0.9);pos.push(a.x,a.y,a.z,b.x,b.y,b.z);if(i>0){const k=i*2;idx.push(k-2,k-1,k,k-1,k+1,k);}i++;}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);
+  const m=new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide,transparent:true,opacity:.85,depthWrite:false});
+  const mesh=new THREE.Mesh(g,m);mesh.renderOrder=3;mesh.userData.n=idx.length;g.setDrawRange(0,0);
+  // 양옆 빛 벽
+  const wp=[],wi=[];let j=0;const wh=5;
+  for(let d=d0;d<=d1+1e-6;d+=st){const dd=Math.min(d,d1);for(const sd of[-ww/2,ww/2]){const a=P3(dd,sd,0.9),b=P3(dd,sd,0.9+wh);wp.push(a.x,a.y,a.z,b.x,b.y,b.z);}
+    if(j>0){const k=j*4;wi.push(k-4,k-3,k,k-3,k+1,k, k-2,k-1,k+2,k-1,k+3,k+2);}j++;}
+  const wg=new THREE.BufferGeometry();wg.setAttribute('position',new THREE.Float32BufferAttribute(wp,3));wg.setIndex(wi);wg.setDrawRange(0,0);
+  const wall=new THREE.Mesh(wg,new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide,transparent:true,opacity:.32,depthWrite:false}));wall.renderOrder=3;wall.userData.n=wi.length;
+  mesh.add(wall);mesh.userData.wall=wall;scene.add(mesh);return mesh;}
+const hlHead=new THREE.Mesh(new THREE.SphereGeometry(1.8,20,14),new THREE.MeshBasicMaterial({color:0xffffff}));hlHead.visible=false;scene.add(hlHead);
+const hlEdge=[0,1].map(()=>{const l=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xffffff}));l.visible=false;scene.add(l);return l;});
+const hlLb=document.createElement('div');hlLb.className='lb cl';hlLb.hidden=true;labels.appendChild(hlLb);
+let hl=null;
+function gate(d,h=7){return[P3(d,-W/2-3,0.9),P3(d,-W/2-3,h),P3(d,W/2+3,h),P3(d,W/2+3,0.9)];}
+function cselect(i){
+  csel=(csel===i)?null:i;
+  if(hl){scene.remove(hl.mesh);const w=hl.mesh.userData.wall;w.geometry.dispose();w.material.dispose();hl.mesh.geometry.dispose();hl.mesh.material.dispose();hl=null;}
+  hlHead.visible=false;hlEdge.forEach(l=>l.visible=false);hlLb.hidden=true;
+  if(csel!==null){const c=CL[csel];
+    hl={c,mesh:hlMesh(c.s,c.e,c.c),t0:performance.now()};
+    hlHead.material.color.set(c.c);
+    [c.s,c.e].forEach((d,j)=>{hlEdge[j].geometry.dispose();hlEdge[j].geometry=new THREE.BufferGeometry().setFromPoints(gate(d));hlEdge[j].material.color.set(c.c);});
+    hlEdge[0].visible=true;hlLb.style.color=c.c;
+    const t=P3((c.s+c.e)/2,0,0);flyTo=t;zoomTo=Math.min(110,62+(c.e-c.s)*0.03);
+    if(innerWidth<=860)stage.scrollIntoView({block:'start',behavior:'smooth'});
+    sel=null;showPop(null);renderList();}
+  renderCourse();
+}
+function renderCourse(){
+  clist.innerHTML='';let last='';
+  CL.forEach((c,i)=>{
+    if(c.g!==last){if(last==='key'){} const h=document.createElement('div');h.className='cg';h.textContent=CG[c.g][L];clist.appendChild(h);last=c.g;}
+    const b=document.createElement('button');b.className='ci';b.setAttribute('aria-pressed',csel===i?'true':'false');
+    b.innerHTML=`<i class="dot" style="background:${c.c}"></i><span>${c[L]}</span><span class="rg">${c.s}–${c.e}m</span><span class="bar"><i style="left:${c.s/25}%;width:${(c.e-c.s)/25}%;background:${c.c}"></i></span>`;
+    b.onclick=()=>cselect(i);clist.appendChild(b);});
+  const n=document.createElement('div');n.className='cnote';n.innerHTML=CNOTE[L];clist.appendChild(n);
+  if(hl){hlLb.innerHTML=hl.c[L]+'<small>'+hl.c.s+'–'+hl.c.e+'m</small>';}
+}
+function updateHL(now){
+  if(!hl)return;const c=hl.c,dur=reduce?1:Math.min(1800,500+(c.e-c.s)*1.1);
+  const p=Math.min(1,(now-hl.t0)/dur),q=1-Math.pow(1-p,3);
+  const n=hl.mesh.userData.n;hl.mesh.geometry.setDrawRange(0,Math.floor(n*q/6)*6);
+  const wl=hl.mesh.userData.wall;wl.geometry.setDrawRange(0,Math.floor(wl.userData.n*q/12)*12);
+  const d=c.s+(c.e-c.s)*q;
+  if(p<1){hlHead.visible=true;hlHead.position.copy(P3(d,0,2.4));}
+  else{hlHead.visible=false;hlEdge[1].visible=true;
+    const k=(now-hl.t0-dur)/1000;hl.mesh.material.opacity=reduce?.8:.6+Math.sin(k*4)*.25;wl.material.opacity=reduce?.3:.22+Math.sin(k*4)*.12;}
+  hlLb.hidden=false;
+}
+
 /* ---------- 목록 + 필터 ---------- */
 const list=document.getElementById('list');
 let filter='star',sel=null;
@@ -313,13 +394,13 @@ function applyLang(){
   {const b=document.getElementById('langBtn');const M={ja:'🇯🇵 日本語',ko:'🇰🇷 한국어',en:'🌐 English'};b.textContent=M[L]+'  ⇄';b.title={ja:'クリックで言語変更',ko:'클릭하면 언어 변경',en:'Click to change language'}[L];}
   arrows.forEach(a=>{const k=a.k;a.lb.innerHTML='<i class="av2" style="background-image:url('+(AV[k.u]||'')+')"></i>'+(k.st?'<span class="star">★ </span>':'')+US(k)+'<small>'+VV(k)+' · '+k.d+'m</small>';});
   marks.forEach(m=>{if(m.el.dataset.k)m.el.textContent=t(m.el.dataset.k);});
-  renderList();if(sel)showPop(sel);
+  renderList();if(sel)showPop(sel);renderCourse();
 }
 document.getElementById('langBtn').onclick=()=>{L={ja:'ko',ko:'en',en:'ja'}[L];try{localStorage.setItem('umamap-lang',L);}catch(e){}applyLang();};
 renderList();
 
 /* ---------- 루프 ---------- */
-let flyTo=null;
+let flyTo=null,zoomTo=null;
 const pop=document.getElementById('pop');
 function showPop(a){
   if(!a){pop.hidden=true;return;}
@@ -330,6 +411,7 @@ function showPop(a){
 }
 function select(a,fromMap){
   sel=(a&&sel===a&&!fromMap)?null:a;
+  if(sel&&csel!==null)cselect(csel);
   if(sel){const t=sel.top.clone();t.y-=6;flyTo=t;}
   showPop(sel);renderList();
   if(sel){const b=document.getElementById('sk-'+arrows.indexOf(sel));if(b&&fromMap)b.scrollIntoView({block:'nearest',behavior:'smooth'});}
@@ -350,11 +432,12 @@ let t0=performance.now();
 function place(el,p,w,h){v.copy(p).project(cam);const vis=v.z<1&&v.x>-1.1&&v.x<1.1&&v.y>-1.1&&v.y<1.2;el.hidden=!vis;if(vis){el.style.left=((v.x+1)/2*w)+'px';el.style.top=((1-v.y)/2*h)+'px';}}
 function loop(now){
   const t=(now-t0)/1000;
-  if(flyTo){ctl.target.lerp(flyTo,.08);if(ctl.target.distanceTo(flyTo)<.2)flyTo=null;}
+  if(flyTo){const old=ctl.target.clone();ctl.target.lerp(flyTo,.08);if(zoomTo)cam.position.add(ctl.target.clone().sub(old));if(ctl.target.distanceTo(flyTo)<.2)flyTo=null;}
+  if(zoomTo){const off=cam.position.clone().sub(ctl.target),dd=off.length(),nd=dd+(zoomTo-dd)*.08;cam.position.copy(ctl.target).add(off.setLength(nd));if(Math.abs(nd-zoomTo)<.3)zoomTo=null;}
   ctl.update();
   const w=stage.clientWidth,h=stage.clientHeight;
   for(const a of arrows){
-    const on=visible(a.k), hi=!sel||sel===a;
+    const on=visible(a.k), hi=(!sel||sel===a)&&!hl;
     a.grp.visible=on;if(a.band)a.band.visible=on&&(!sel||sel===a);
     a.mat.opacity=hi?1:.15;
     a.grp.position.y=P3(a.k.d,0,0.6).y+(reduce?0:Math.sin(t*2+a.k.d)*0.35);
@@ -362,6 +445,7 @@ function loop(now){
     place(a.lb,a.top,w,h);if(!a.k.st&&sel!==a&&filter!=='front'&&filter!=='back'){a.lb.hidden=true;}a.lb.classList.toggle('dim',!hi);a.lb.classList.toggle('sel',sel===a);
   }
   for(const m of marks)place(m.el,m.v,w,h);
+  updateHL(now);if(hl){place(hlLb,P3((hl.c.s+hl.c.e)/2,0,9),w,h);if(hlLb.hidden===false&&!hlLb.style.left)hlLb.hidden=true;}
   // 화면 위 라벨 겹침 해소: 아래쪽부터 놓고, 겹치면 위로 밀어올림
   {const items=[];for(const el of labels.children){if(el.hidden)continue;const x=parseFloat(el.style.left),y=parseFloat(el.style.top);if(isNaN(x))continue;items.push({el,x,y,w:el.offsetWidth,h:el.offsetHeight,pri:el.classList.contains('mk')?0:1});}
    items.sort((a,b)=>b.y-a.y);const placed=[];
