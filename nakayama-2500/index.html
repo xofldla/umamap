@@ -92,7 +92,9 @@ aside{background:var(--panel);border:1.5px solid var(--line);border-radius:18px;
  .ci .rg{grid-column:2}
  .stage .hint{top:auto;bottom:auto;display:none}
 }
-.course::-webkit-scrollbar{display:none}
+.course::-webkit-scrollbar{display:none;width:0;height:0}
+.course{-ms-overflow-style:none}
+.course.drag{cursor:grabbing;user-select:none}.course.drag .ci{cursor:grabbing}
 .pop[hidden]{display:none}
 .lb.cl{z-index:7;font-size:12.5px;border-width:2px;background:rgba(20,24,51,.95)}
 .cbox{background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;font-size:12.5px;color:var(--muted);line-height:1.55}
@@ -358,6 +360,14 @@ function cselect(i){
     sel=null;showPop(null);renderList();}
   renderCourse();
 }
+// 좁은 화면: 마우스 드래그로 가로 스크롤 (터치는 기본 스크롤)
+{let st=null,moved=false;
+ clist.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'||clist.scrollWidth<=clist.clientWidth)return;st={x:e.clientX,l:clist.scrollLeft};moved=false;});
+ addEventListener('pointermove',e=>{if(!st)return;const dx=e.clientX-st.x;if(Math.abs(dx)>4){moved=true;clist.classList.add('drag');}if(moved)clist.scrollLeft=st.l-dx;});
+ addEventListener('pointerup',()=>{if(!st)return;st=null;setTimeout(()=>{clist.classList.remove('drag');moved=false;},0);});
+ clist.addEventListener('click',e=>{if(moved){e.stopPropagation();e.preventDefault();}},true);
+ clist.addEventListener('dragstart',e=>e.preventDefault());
+ clist.addEventListener('wheel',e=>{if(clist.scrollWidth>clist.clientWidth&&Math.abs(e.deltaY)>Math.abs(e.deltaX)){clist.scrollLeft+=e.deltaY;e.preventDefault();}},{passive:false});}
 function renderCourse(){
   clist.innerHTML='';let last='';
   CL.forEach((c,i)=>{
