@@ -201,7 +201,7 @@ const SK=[
  {n:'Mission: Triumph',u:'심볼리 크리스 에스',s:'back',v:'1500',d:1480,r:[1375,1525],st:0,note:'내리막 직선이면 3.6초',nj:"Mission: Triumph",ne:"Mission: Triumph",uj:"シンボリクリスエス",ue:"Symboli Kris S",nj2:"下り坂の直線なら3.6秒",ne2:"3.6s on downhill straight"},
  {n:'여름 벼락 캐스케이드!',u:'사토노 크라운(수영복)',s:'back',v:'현재속도2500',d:620,r:[0,1250],st:0,note:'선입 한정 · 전반 순위 상승',nj:"夏雷カスケード！",ne:"Summer Thunder Cascade!",uj:"サトノクラウン(水着)",ue:"Satono Crown(Swimsuit)",nj2:"差し限定・前半で順位上昇",ne2:"Betweener only · gain position early"},
  {n:'Shadow Break',u:'나리타 브라이언',s:'back',v:'2500',d:2150,st:0,note:'최종 코너 안쪽 추월',nj:"Shadow Break",ne:"Shadow Break",uj:"ナリタブライアン",ue:"Narita Brian",nj2:"最終コーナー内側から追い抜き",ne2:"Overtake on inside of final corner"},
- {n:'날 선 기세의 알레그로',u:'윈 바리아시옹',s:'back',v:'3500',d:2360,r:[2190,2500],st:0,note:'최종 직선 310m라 3명 추월 어려움',nj:"鋭気のアレグロ",ne:"Allegro of Valor",uj:"ウインバリアシオン",ue:"Win Variation",nj2:"最終直線310mで3人抜きは難しい",ne2:"Passing 3 on a 310m final straight is hard"},
+ {n:'날 선 기세의 알레그로',u:'윈 바리아시옹',s:'back',v:'3500',d:2360,r:[2190,2500],st:0,note:'추입 전용 · 최종 직선 3명 추월 (310m라 어려움)',nj:"鋭気のアレグロ",ne:"Allegro of Valor",uj:"ウインバリアシオン",ue:"Win Variation",nj2:"追込専用・最終直線で3人抜き（310mなので難しい）",ne2:"Chaser only · pass 3 on the final straight (hard on 310m)"},
 ];
 // 같은 지점 겹침 → 높이 계단
 {SK.sort((a,b)=>a.d-b.d);let last=-1e9,lv=0;SK.forEach(k=>{k.lvl=0;if(!k.st)return;lv=(k.d-last<90)?lv+1:0;k.lvl=lv%3;last=k.d;});}
