@@ -70,12 +70,12 @@ aside{background:var(--panel);border:1.5px solid var(--line);border-radius:18px;
 .sk span{font-size:12px;color:var(--muted)}
 .sk .v{font:500 12px var(--mono);color:var(--gold);text-align:right;max-width:92px;overflow-wrap:anywhere}
 .star{color:var(--gold)}
-.course{position:absolute;left:12px;top:12px;width:186px;z-index:8;display:flex;flex-direction:column;gap:3px;overflow-y:auto;scrollbar-width:thin;padding:6px;background:rgba(20,24,51,.82);border:1.5px solid var(--line);border-radius:14px;backdrop-filter:blur(4px)}
+.course{position:absolute;left:12px;top:12px;width:max-content;max-width:150px;z-index:8;display:flex;flex-direction:column;gap:3px;overflow-y:auto;scrollbar-width:thin;padding:6px;background:rgba(20,24,51,.82);border:1.5px solid var(--line);border-radius:14px;backdrop-filter:blur(4px)}
 .cg{font:500 10px var(--body);letter-spacing:.5px;color:var(--muted);margin:4px 2px 0}.cg:first-child{margin-top:0}
-.ci{flex:none;display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:6px;align-items:center;width:100%;text-align:left;background:var(--panel-2);border:1.5px solid transparent;border-radius:7px;padding:3px 7px;color:var(--fg);font:700 11.5px var(--body);cursor:pointer;line-height:1.3}
+.ci{flex:none;display:grid;grid-template-columns:7px minmax(0,1fr);gap:6px;align-items:center;width:100%;text-align:left;background:var(--panel-2);border:1.5px solid transparent;border-radius:6px;padding:2px 8px;color:var(--fg);font:700 11px var(--body);cursor:pointer;line-height:1.3}
 .ci:hover{border-color:var(--line);filter:brightness(1.15)}.ci[aria-pressed="true"]{border-color:var(--gold);background:#2f3780}
 .ci:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
-.ci .dot{width:8px;height:8px;border-radius:50%}
+.ci .dot{width:7px;height:7px;border-radius:50%}
 .ci .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ci .rg{font:500 10px var(--mono);color:var(--gold);white-space:nowrap}
 .ci .bar{grid-column:1/4;position:relative;height:4px;border-radius:2px;background:#151a3d;overflow:hidden;margin-top:2px}
@@ -85,7 +85,7 @@ aside{background:var(--panel);border:1.5px solid var(--line);border-radius:18px;
 .cnote{font-size:10px;color:var(--muted);padding:2px 2px 0;line-height:1.35}.cnote em{font-style:normal;color:var(--gold)}
 .stage .hint{left:auto;right:12px;z-index:9;background:rgba(20,24,51,.75);padding:2px 8px;border-radius:6px}
 @media (max-width:860px){
- .course{left:8px;right:8px;top:8px;bottom:auto;width:auto;flex-direction:row;overflow-x:auto;overflow-y:hidden;padding:6px;gap:5px;border-radius:12px}
+ .course{left:8px;right:8px;top:8px;bottom:auto;width:auto;max-width:none;flex-direction:row;overflow-x:auto;overflow-y:hidden;padding:6px;gap:5px;border-radius:12px}
  .cg,.cnote{display:none}
  .ci{width:auto;min-width:0;grid-template-columns:8px auto;gap:1px 6px;padding:3px 8px}
  .ci .rg{grid-column:2;text-align:left}
@@ -362,8 +362,8 @@ function renderCourse(){
   CL.forEach((c,i)=>{
     if(c.g!==last){if(last==='key'){} const h=document.createElement('div');h.className='cg';h.textContent=CG[c.g][L];clist.appendChild(h);last=c.g;}
     const b=document.createElement('button');b.className='ci';b.setAttribute('aria-pressed',csel===i?'true':'false');
-    b.title=c[L];
-    b.innerHTML=`<i class="dot" style="background:${c.c}"></i><span class="nm">${c.sh?c.sh[L]:c[L]}</span><span class="rg">${c.s}~${c.e}m</span>`;
+    b.title=c[L]+' '+c.s+'~'+c.e+'m';
+    b.innerHTML=`<i class="dot" style="background:${c.c}"></i><span class="nm">${c.sh?c.sh[L]:c[L]}</span>`;
     b.onclick=()=>cselect(i);clist.appendChild(b);});
   const n=document.createElement('div');n.className='cnote';n.innerHTML=CNOTE[L];clist.appendChild(n);
   if(hl){hlLb.innerHTML=hl.c[L]+'<small>'+hl.c.s+'–'+hl.c.e+'m</small>';}
