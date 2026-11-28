@@ -69,19 +69,27 @@ aside{background:var(--panel);border:1.5px solid var(--line);border-radius:18px;
 .sk span{font-size:12px;color:var(--muted)}
 .sk .v{font:500 12px var(--mono);color:var(--gold);text-align:right;max-width:92px;overflow-wrap:anywhere}
 .star{color:var(--gold)}
-.course{background:var(--panel);border:1.5px solid var(--line);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;text-align:left}
-.cg{font:500 12px var(--body);letter-spacing:1px;color:var(--muted);margin:8px 0 2px}.cg:first-child{margin-top:0}
-.ci{display:grid;grid-template-columns:12px minmax(0,300px) 104px minmax(100px,260px);justify-content:start;gap:10px;align-items:center;width:100%;text-align:left;background:var(--panel-2);border:1.5px solid transparent;border-radius:10px;padding:8px 12px;color:var(--fg);font:500 13.5px var(--body);cursor:pointer}
-.ci:hover{border-color:var(--line)}.ci[aria-pressed="true"]{border-color:var(--gold);background:#2a3170}
-.ci:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-.ci .dot{width:12px;height:12px;border-radius:50%}
-.ci .rg{font:500 12.5px var(--mono);color:var(--gold);white-space:nowrap;text-align:left}
-.ci .bar{position:relative;height:8px;border-radius:4px;background:#1a1f45;overflow:hidden}
-.ci .bar i{position:absolute;top:0;bottom:0;border-radius:4px}
+.course{position:absolute;left:12px;top:12px;bottom:56px;width:196px;z-index:8;display:flex;flex-direction:column;gap:4px;overflow-y:auto;scrollbar-width:thin;padding:8px;background:rgba(20,24,51,.82);border:1.5px solid var(--line);border-radius:14px;backdrop-filter:blur(4px)}
+.cg{font:500 10.5px var(--body);letter-spacing:.5px;color:var(--muted);margin:6px 2px 0}.cg:first-child{margin-top:0}
+.ci{flex:none;display:grid;grid-template-columns:9px minmax(0,1fr) auto;gap:3px 7px;align-items:center;width:100%;text-align:left;background:var(--panel-2);border:1.5px solid transparent;border-radius:9px;padding:5px 8px;color:var(--fg);font:700 12.5px var(--body);cursor:pointer;line-height:1.25}
+.ci:hover{border-color:var(--line);filter:brightness(1.15)}.ci[aria-pressed="true"]{border-color:var(--gold);background:#2f3780}
+.ci:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.ci .dot{width:9px;height:9px;border-radius:50%}
+.ci .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci .rg{font:500 10.5px var(--mono);color:var(--gold);white-space:nowrap}
+.ci .bar{grid-column:1/4;position:relative;height:4px;border-radius:2px;background:#151a3d;overflow:hidden;margin-top:2px}
+.ci .bar i{position:absolute;top:0;bottom:0;border-radius:2px}
 .ci[aria-pressed="true"] .bar i{animation:barw 1.1s ease-out}
 @keyframes barw{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
-.cnote{font-size:12.5px;color:var(--muted);padding:6px 2px 0}.cnote em{font-style:normal;color:var(--gold)}
-@media (max-width:560px){.ci{grid-template-columns:12px minmax(0,1fr) auto;justify-content:stretch}.ci .bar{grid-column:1/4}}
+.cnote{font-size:10.5px;color:var(--muted);padding:4px 2px 0;line-height:1.4}.cnote em{font-style:normal;color:var(--gold)}
+.stage .hint{left:220px}
+@media (max-width:860px){
+ .course{left:8px;right:8px;top:8px;bottom:auto;width:auto;flex-direction:row;overflow-x:auto;overflow-y:hidden;padding:6px;gap:5px;border-radius:12px}
+ .cg,.cnote{display:none}
+ .ci{width:auto;min-width:92px;grid-template-columns:9px minmax(0,1fr)}
+ .ci .rg{grid-column:2}
+ .stage .hint{top:auto;bottom:auto;display:none}
+}
 .pop[hidden]{display:none}
 .lb.cl{z-index:7;font-size:12.5px;border-width:2px;background:rgba(20,24,51,.95)}
 .cbox{background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;font-size:12.5px;color:var(--muted);line-height:1.55}
@@ -115,6 +123,7 @@ aside{background:var(--panel);border:1.5px solid var(--line);border-radius:18px;
       <canvas id="cv" aria-label="나카야마 2500m 코스 3D 모델"></canvas>
       <div class="labels" id="labels"></div>
       <div class="hint" data-i="hint"></div>
+      <nav class="course" id="clist" aria-label="Course data"></nav>
       <div class="pop" id="pop" hidden role="dialog" aria-label="계승 고유 상세"></div>
       <div class="legend">
         <span><i style="background:var(--straight)"></i><b data-i="lgS" style="font-weight:400"></b></span>
@@ -129,7 +138,6 @@ aside{background:var(--panel);border:1.5px solid var(--line);border-radius:18px;
     <aside id="list" aria-label="계승 고유 목록"></aside>
   </div>
 
-  <div class="course" id="clist" aria-label="Course data"></div>
   <div class="wm" data-i="wm"></div>
 </div>
 
@@ -305,13 +313,13 @@ const CL=[
  {g:'phase',s:417,e:1667,c:'#9aa0d6',ko:'중반',ja:'中盤',en:'Mid'},
  {g:'phase',s:1667,e:2083,c:'#e3c46e',ko:'종반',ja:'終盤',en:'Late'},
  {g:'phase',s:2083,e:2500,c:'#ff7a7a',ko:'라스트',ja:'ラスト',en:'Last spurt'},
- {g:'spurt',s:1667,e:2500,c:'#e3c46e',ko:'스퍼트 (건너편 직선 1667m~)',ja:'スパート（向正面直線 1667m〜）',en:'Spurt (from backstretch 1667m)'},
- {g:'spurt',s:0,e:1042,c:'#9aa0d6',ko:'포지션 킵 (~1042m 종료)',ja:'ポジションキープ（〜1042m 終了）',en:'Position keep (ends 1042m)'},
+ {g:'spurt',s:1667,e:2500,c:'#e3c46e',sh:{ko:'스퍼트',ja:'スパート',en:'Spurt'},ko:'스퍼트 (건너편 직선 1667m~)',ja:'スパート（向正面直線 1667m〜）',en:'Spurt (from backstretch 1667m)'},
+ {g:'spurt',s:0,e:1042,c:'#9aa0d6',sh:{ko:'포지션 킵',ja:'ポジキープ',en:'Position keep'},ko:'포지션 킵 (~1042m 종료)',ja:'ポジションキープ（〜1042m 終了）',en:'Position keep (ends 1042m)'},
  {g:'slope',s:621,e:731,c:'#ff8a65',ko:'오르막 ①',ja:'上り坂 ①',en:'Uphill ①'},
  {g:'slope',s:825,e:1025,c:'#ff8a65',ko:'오르막 ②',ja:'上り坂 ②',en:'Uphill ②'},
  {g:'slope',s:1125,e:1525,c:'#4dd0e1',ko:'내리막',ja:'下り坂',en:'Downhill'},
  {g:'slope',s:2325,e:2435,c:'#ff8a65',ko:'결승 오르막',ja:'ゴール前上り',en:'Final uphill'},
- {g:'key',s:2190,e:2500,c:'#e3c46e',ko:'최종 직선 310m (짧음 + 오르막 → 선입 유리)',ja:'最終直線 310m（短く上り坂 → 差し有利）',en:'Final straight 310m (short + uphill → Betweeners favored)'}];
+ {g:'key',s:2190,e:2500,c:'#e3c46e',sh:{ko:'최종 직선 310m',ja:'最終直線 310m',en:'Final straight 310m'},ko:'최종 직선 310m (짧음 + 오르막 → 선입 유리)',ja:'最終直線 310m（短く上り坂 → 差し有利）',en:'Final straight 310m (short + uphill → Betweeners favored)'}];
 const CNOTE={ko:'스탯 체크: <em>스태미나 · 근성</em>',ja:'ステータスチェック：<em>スタミナ・根性</em>',en:'Stat check: <em>Stamina · Guts</em>'};
 const clist=document.getElementById('clist');
 let csel=null;
@@ -344,7 +352,6 @@ function cselect(i){
     [c.s,c.e].forEach((d,j)=>{hlEdge[j].geometry.dispose();hlEdge[j].geometry=new THREE.BufferGeometry().setFromPoints(gate(d));hlEdge[j].material.color.set(c.c);});
     hlEdge[0].visible=true;hlLb.style.color=c.c;
     const t=P3((c.s+c.e)/2,0,0);flyTo=t;zoomTo=Math.min(110,62+(c.e-c.s)*0.03);
-    if(innerWidth<=860)stage.scrollIntoView({block:'start',behavior:'smooth'});
     sel=null;showPop(null);renderList();}
   renderCourse();
 }
@@ -353,7 +360,8 @@ function renderCourse(){
   CL.forEach((c,i)=>{
     if(c.g!==last){if(last==='key'){} const h=document.createElement('div');h.className='cg';h.textContent=CG[c.g][L];clist.appendChild(h);last=c.g;}
     const b=document.createElement('button');b.className='ci';b.setAttribute('aria-pressed',csel===i?'true':'false');
-    b.innerHTML=`<i class="dot" style="background:${c.c}"></i><span>${c[L]}</span><span class="rg">${c.s}–${c.e}m</span><span class="bar"><i style="left:${c.s/25}%;width:${(c.e-c.s)/25}%;background:${c.c}"></i></span>`;
+    b.title=c[L];
+    b.innerHTML=`<i class="dot" style="background:${c.c}"></i><span class="nm">${c.sh?c.sh[L]:c[L]}</span><span class="rg">${c.s}–${c.e}m</span><span class="bar"><i style="left:${c.s/25}%;width:${(c.e-c.s)/25}%;background:${c.c}"></i></span>`;
     b.onclick=()=>cselect(i);clist.appendChild(b);});
   const n=document.createElement('div');n.className='cnote';n.innerHTML=CNOTE[L];clist.appendChild(n);
   if(hl){hlLb.innerHTML=hl.c[L]+'<small>'+hl.c.s+'–'+hl.c.e+'m</small>';}
