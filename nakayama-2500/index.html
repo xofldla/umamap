@@ -31,7 +31,7 @@ h1 span{color:var(--gold)}
 .chip{font:500 13px var(--body);color:var(--fg);background:var(--panel);border:1.5px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer}
 .hr{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
 @media (max-width:860px){.hr{align-items:flex-start}}
-.langbtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);right:max(12px,env(safe-area-inset-right,0px));z-index:50;font-size:13px;padding:6px 14px;background:var(--panel-2);border-color:var(--gold);box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.langbtn{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:max(12px,env(safe-area-inset-right,0px));z-index:50;font-size:13px;padding:6px 14px;background:var(--panel-2);border-color:var(--gold);box-shadow:0 4px 14px rgba(0,0,0,.35)}
 header>div:first-child{padding-right:150px;min-width:0}
 @media (max-width:560px){header>div:first-child{padding-right:0;padding-top:40px}}
 .chip[aria-pressed="true"]{background:var(--gold);color:#1b1d33;border-color:var(--gold)}
